@@ -1,2 +1,7 @@
-spring boot + mybatis + durid﻿
+spring boot + mybatis + jta-atomikos
+1.分布式事务jta-atimikos
+2.和druid不一样，添加了gisSqlSessionTemplate处理
+2.使用时，添加  @Transactional(rollbackFor=RuntimeException.class)
+
+﻿
 

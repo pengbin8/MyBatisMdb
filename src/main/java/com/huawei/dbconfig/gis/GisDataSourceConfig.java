@@ -1,23 +1,26 @@
 package com.huawei.dbconfig.gis;
 
+import java.sql.SQLException;
+
 import javax.sql.DataSource;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jta.atomikos.AtomikosDataSourceBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
-import com.alibaba.druid.pool.DruidDataSource;
+import com.mysql.jdbc.jdbc2.optional.MysqlXADataSource;
 
 @Configuration
-@MapperScan(basePackages=GisDataSourceConfig.PACKAGE,sqlSessionFactoryRef="gisSqlSessionFactory")
+@MapperScan(basePackages=GisDataSourceConfig.PACKAGE,sqlSessionTemplateRef = "gisSqlSessionTemplate")
 @ConfigurationProperties(value = "classpath:application-${spring.profiles.active}.properties")
 public class GisDataSourceConfig {
 
@@ -34,36 +37,44 @@ public class GisDataSourceConfig {
 
 	@Bean(name="gisDataSource")
 	@Primary
-	public DataSource gisDataSource() {
-		DruidDataSource dtSource=new DruidDataSource();
-		dtSource.setDriverClassName(driverClass);
-		dtSource.setUsername(username);
-		dtSource.setPassword(password);
-		dtSource.setUrl(jdbcUrl);
-		dtSource.setPoolPreparedStatements(false);
-		dtSource.setMaxActive(50);
-		dtSource.setMinIdle(5);
-		dtSource.setMaxWait(5*60000);
-		dtSource.setTimeBetweenEvictionRunsMillis(5*60000);
-		dtSource.setMinEvictableIdleTimeMillis(5*60000);
-		dtSource.setValidationQuery("select 'x'");
-		return dtSource;
+	public DataSource gisDataSource() throws SQLException {
+		MysqlXADataSource mysqlXaDataSource = new MysqlXADataSource();
+		mysqlXaDataSource.setUrl(jdbcUrl);
+		mysqlXaDataSource.setPinGlobalTxToPhysicalConnection(true);
+		mysqlXaDataSource.setPassword(password);
+		mysqlXaDataSource.setUser(username);
+		mysqlXaDataSource.setPinGlobalTxToPhysicalConnection(true);
+
+		AtomikosDataSourceBean xaDataSource = new AtomikosDataSourceBean();
+		xaDataSource.setXaDataSource(mysqlXaDataSource);
+		xaDataSource.setUniqueResourceName("gisDataSource");
+
+		xaDataSource.setMinPoolSize(5);
+		xaDataSource.setMaxPoolSize(20);
+		xaDataSource.setMaxLifetime(5*36000);
+		xaDataSource.setBorrowConnectionTimeout(5*3000);
+		xaDataSource.setLoginTimeout(5*6000);
+		xaDataSource.setMaintenanceInterval(6*60000);
+		xaDataSource.setMaxIdleTime(20*36000);
+		xaDataSource.setTestQuery("select 'x'");
+		return xaDataSource;
 	}
-	@Bean(name="gisTransactionManager")
-	@Primary
-	public DataSourceTransactionManager getTransactionManager() {
-		return new DataSourceTransactionManager(gisDataSource());
-	}
-	
-	@Bean(name="gisSqlSessionFactory")
-	@Primary
-	public SqlSessionFactory getSqlSessionFactory(@Qualifier(value="gisDataSource") DataSource dtSource) throws Exception {
-		final SqlSessionFactoryBean sqlsession=new SqlSessionFactoryBean();
-		sqlsession.setDataSource(dtSource);
-		sqlsession.setMapperLocations(
+
+	@Bean(name = "gisSqlSessionFactory")
+	public SqlSessionFactory gisSqlSessionFactory(@Qualifier("gisDataSource") DataSource dataSource)
+			throws Exception {
+		SqlSessionFactoryBean bean = new SqlSessionFactoryBean();
+		bean.setDataSource(dataSource);
+		bean.setMapperLocations(
 				new PathMatchingResourcePatternResolver()
 				.getResources(GisDataSourceConfig.MAPPER_LOCATION));
-		return sqlsession.getObject();
+		return bean.getObject();
+	}
+
+	@Bean(name = "gisSqlSessionTemplate")
+	public SqlSessionTemplate gisSqlSessionTemplate(
+			@Qualifier("gisSqlSessionFactory") SqlSessionFactory sqlSessionFactory) throws Exception {
+		return new SqlSessionTemplate(sqlSessionFactory);
 	}
 	
 }

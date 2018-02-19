@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.huawei.model.Layer;
 import com.huawei.model.UpdateLayer;
+import com.huawei.service.LayerPlatformatService;
 import com.huawei.service.LayerService;
 
 import io.swagger.annotations.Api;
@@ -29,7 +31,8 @@ import io.swagger.annotations.ApiOperation;
 @Api(description="图层控制器")
 public class LayerController {
 
-	
+	@Autowired
+	private LayerPlatformatService layerPlatformatService;
 	
 	@Autowired
 	private LayerService layerService;
@@ -49,8 +52,13 @@ public class LayerController {
 	
 	@RequestMapping(value="/gis/deleteLayers",method=RequestMethod.GET)
 	@ApiOperation(value = "批量删除图层")
+	@Transactional(rollbackFor=Exception.class)
 	public boolean deleteLayers(@RequestParam(required=true) ArrayList<Integer> ids) {
-		return layerService.deleteLayers(ids);
+		layerService.deleteLayers(ids);
+		int i=1/0;
+		System.out.println("====="+i);
+		layerPlatformatService.deleteLayers(ids);
+		return true;
 	}
 	
 	@RequestMapping(value="/gis/getLayers",method=RequestMethod.GET)
