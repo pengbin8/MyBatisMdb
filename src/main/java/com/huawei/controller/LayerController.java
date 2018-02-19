@@ -2,6 +2,7 @@ package com.huawei.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,8 @@ import io.swagger.annotations.ApiOperation;
 @Api(description="图层控制器")
 public class LayerController {
 
+	private Logger logger = Logger.getLogger("LayerController");
+	
 	@Autowired
 	private LayerPlatformatService layerPlatformatService;
 	
@@ -64,7 +67,7 @@ public class LayerController {
 	@RequestMapping(value="/gis/getLayers",method=RequestMethod.GET)
 	@ApiOperation(value = "图层查询")
 	public List<Layer> getLayers(String appId,String objectCode) {
-//		logger.info("appid:"+appId+"objectcode:"+objectCode);
+		logger.info("appid:"+appId+"objectcode:"+objectCode);
 		return layerService.getLayers(appId,objectCode);
 	}
 	
