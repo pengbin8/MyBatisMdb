@@ -52,7 +52,7 @@ public class LayerController {
 	
 	@RequestMapping(value="/gis/deleteLayers",method=RequestMethod.GET)
 	@ApiOperation(value = "批量删除图层")
-	@Transactional(rollbackFor=Exception.class)
+	@Transactional(rollbackFor=RuntimeException.class)
 	public boolean deleteLayers(@RequestParam(required=true) ArrayList<Integer> ids) {
 		layerService.deleteLayers(ids);
 		int i=1/0;
