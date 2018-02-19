@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.huawei.dao.gis.LayerDao">
+	<insert id="inseryLayers" parameterType="java.util.List"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		layer (
+		APPID,
+		PROJECTCODE,
+		OBJECTCODE
+		) values
+		<foreach collection="list" item="it" index="index" separator=",">
+			(
+			#{it.appId,jdbcType=VARCHAR},
+			#{it.projectCode,jdbcType=VARCHAR},
+			#{it.objectCode,jdbcType=VARCHAR}
+			)
+		</foreach>
+	</insert>
+	<select id="getLayers" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from layer
+		where 1=1
+		<if test="APPID !=null">
+			and APPID=#{APPID}
+		</if>
+		<if test="OBJECTCODE !=null">
+			and OBJECTCODE=#{OBJECTCODE}
+		</if>
+	</select>
+	<update id="updateLayer" parameterType="com.huawei.model.UpdateLayer">
+		update layer
+		<set>
+			<if test="appId !=null">APPID=#{appId,jdbcType=VARCHAR},</if>
+			<if test="objectCode !=null">OBJECTCODE=#{objectCode,jdbcType=VARCHAR},</if>
+			<if test="projectCode !=null">PROJECTCODE=#{projectCode,jdbcType=VARCHAR},</if>
+		</set>
+		where ID=#{id}
+	</update>
+	<delete id="deleteLayers" parameterType="java.util.List">
+		delete from layer where id in
+		<foreach collection="list" item="id" open="(" separator=","
+			close=")">
+			#{id}
+		</foreach>
+	</delete>
+</mapper>
