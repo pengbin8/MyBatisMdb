@@ -8,7 +8,7 @@ package com.huawei.model;
  * @copyRight .huawei.com
  * @eSpace pwx391198
  */
-public class Layer {
+public class LayerPlatformat {
 	
 	private String appId;
 	private String objectCode;
