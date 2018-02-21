@@ -16,9 +16,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Component
 public class AutoLogger {
 	private Logger logger = Logger.getLogger("AutoLogger");
+	
 	@Pointcut("execution(public * com.huawei.controller..*.*(..))")
 	public void webLog() {
 	}
+	
 	@Before("webLog()")
 	public void doBefore(JoinPoint joinPoint) throws Throwable {
 		// 接收到请求，记录请求内容
